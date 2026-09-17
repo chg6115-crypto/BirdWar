@@ -426,6 +426,8 @@ GameObject:
   - component: {fileID: 7668807086832115686}
   - component: {fileID: 2609503217961155601}
   - component: {fileID: 8041102267077493473}
+  - component: {fileID: 4686267312118906858}
+  - component: {fileID: -4925909225012519347}
   m_Layer: 0
   m_Name: Duck
   m_TagString: Untagged
@@ -476,11 +478,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 983f5fb7eb5c45548826fabcbbcca4e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnitStats
-  maxHealth: 10
+  maxHealth: 100
   moveSpeed: 3
-  detectionRange: 10
-  attackRange: 8
-  attackDamage: 10
+  detectionRange: 15
+  attackRange: 9
+  attackDamage: 30
   attackCooldown: 1
 --- !u!114 &7668807086832115686
 MonoBehaviour:
@@ -507,6 +509,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AIController
   destination: {fileID: 0}
+  separationRadius: 1.2
+  separationStrength: 1.5
 --- !u!114 &8041102267077493473
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -521,3 +525,30 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   backwardSpeedMultiplier: 0.6
   rotationSpeed: 120
+--- !u!114 &4686267312118906858
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9095501663127247788}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7568c5b6b400ac842b4b29411ab93713, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerWeaponInput
+--- !u!114 &-4925909225012519347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9095501663127247788}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccaf5e9c596909243876c24f9186b517, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponController
+  bulletPrefab: {fileID: 1208919893768153180, guid: 64f5e7854d6604644a9629d8e0793899, type: 3}
+  firePoint: {fileID: 8449255108829554031}
+  fireCooldown: 1

@@ -115,7 +115,7 @@ Transform:
   m_GameObject: {fileID: 5684307804527427736}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.014, z: 0.209}
+  m_LocalPosition: {x: 0, y: 0.029, z: 0.235}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -279,6 +279,7 @@ GameObject:
   - component: {fileID: 4280102918914510050}
   - component: {fileID: 1575107245589152728}
   - component: {fileID: 4925382908579023325}
+  - component: {fileID: -1093451632936903722}
   m_Layer: 0
   m_Name: Chicken
   m_TagString: Untagged
@@ -329,12 +330,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 983f5fb7eb5c45548826fabcbbcca4e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnitStats
-  maxHealth: 10
+  maxHealth: 100
   moveSpeed: 3
   detectionRange: 10
-  attackRange: 8
-  attackDamage: 10
-  attackCooldown: 1
+  attackRange: 9
+  attackDamage: 8
+  attackCooldown: 0.3
 --- !u!114 &1575107245589152728
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -360,6 +361,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AIController
   destination: {fileID: 0}
+  separationRadius: 1.2
+  separationStrength: 1.5
+--- !u!114 &-1093451632936903722
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7555236524622433384}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccaf5e9c596909243876c24f9186b517, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponController
+  bulletPrefab: {fileID: 684370198060241636, guid: 17f7b9b6b7e19ac4d8de8171c451df03, type: 3}
+  firePoint: {fileID: 3303194481168279427}
+  fireCooldown: 0.3
 --- !u!1 &7641437418533056496
 GameObject:
   m_ObjectHideFlags: 0

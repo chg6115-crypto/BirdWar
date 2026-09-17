@@ -1,6 +1,8 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using TMPro;
 
 public class PlayerManager : MonoBehaviour
 {
@@ -11,37 +13,51 @@ public class PlayerManager : MonoBehaviour
     [SerializeField] private float possessionDelay = 3f;
 
     [Header("Camera")]
-    [SerializeField] private Camera mainCamera;
     [SerializeField] private CameraController cameraController;
 
-    [Header("Selection")]
-    [SerializeField] private LayerMask selectionLayerMask = ~0;
+    [Header("UI")]
+    [SerializeField] private GameObject spectatorUI;
+    [SerializeField] private TMP_Text respawnText;
 
     private GameObject currentPlayerUnit;
+    private GameObject spectatingDuck;
+
     private bool canPossess = true;
-    private bool selectingUnit = false;
+    private bool isSpectating = false;
 
     public GameObject CurrentPlayerUnit => currentPlayerUnit;
-    public bool CanPossess => canPossess;
 
     void Start()
     {
+        SetSpectatorUI(false);
+
         if (startingDuck != null)
             Possess(startingDuck);
     }
 
     void Update()
     {
-        if (!selectingUnit ||
-            !canPossess ||
-            mainCamera == null ||
-            Mouse.current == null)
-        {
+        if (!isSpectating)
             return;
-        }
 
-        if (Mouse.current.leftButton.wasPressedThisFrame)
-            TrySelectDuck();
+        if (spectatingDuck == null)
+            SelectFirstSpectatingDuck();
+
+        if (Keyboard.current == null)
+            return;
+
+        if (Keyboard.current.aKey.wasPressedThisFrame)
+            ChangeSpectatingDuck(-1);
+
+        if (Keyboard.current.dKey.wasPressedThisFrame)
+            ChangeSpectatingDuck(1);
+
+        if (canPossess &&
+            Keyboard.current.spaceKey.wasPressedThisFrame &&
+            spectatingDuck != null)
+        {
+            Possess(spectatingDuck);
+        }
     }
 
     public void Possess(GameObject unit)
@@ -49,16 +65,21 @@ public class PlayerManager : MonoBehaviour
         if (!canPossess || unit == null)
             return;
 
-        UnitTeam unitTeam = unit.GetComponent<UnitTeam>();
-        UnitHealth unitHealth = unit.GetComponent<UnitHealth>();
-        AIController aiController = unit.GetComponent<AIController>();
-        PlayerController playerController =
-            unit.GetComponent<PlayerController>();
+        UnitTeam team = unit.GetComponent<UnitTeam>();
+        UnitHealth health = unit.GetComponent<UnitHealth>();
+        AIController ai = unit.GetComponent<AIController>();
+        PlayerController player = unit.GetComponent<PlayerController>();
+        PlayerWeaponInput weaponInput =
+            unit.GetComponent<PlayerWeaponInput>();
+        WeaponController weapon =
+            unit.GetComponent<WeaponController>();
 
-        if (unitTeam == null ||
-            unitHealth == null ||
-            aiController == null ||
-            playerController == null)
+        if (team == null ||
+            health == null ||
+            ai == null ||
+            player == null ||
+            weaponInput == null ||
+            weapon == null)
         {
             Debug.LogWarning(
                 $"{unit.name}: 빙의에 필요한 컴포넌트가 없습니다."
@@ -66,14 +87,9 @@ public class PlayerManager : MonoBehaviour
             return;
         }
 
-        if (unitHealth.IsDead)
-            return;
-
-        if (unitTeam.CurrentTeam != UnitTeam.Team.Duck)
+        if (health.IsDead ||
+            team.CurrentTeam != UnitTeam.Team.Duck)
         {
-            Debug.LogWarning(
-                $"{unit.name}: Duck 팀이 아니므로 빙의할 수 없습니다."
-            );
             return;
         }
 
@@ -83,15 +99,21 @@ public class PlayerManager : MonoBehaviour
             ReleaseCurrentUnit();
         }
 
-        aiController.enabled = false;
-        playerController.enabled = true;
+        // AI 제어는 끄고 플레이어 입력만 켭니다.
+        // WeaponController는 AI/Player 공용이므로 항상 켜둡니다.
+        ai.enabled = false;
+        player.enabled = true;
+        weaponInput.enabled = true;
+        weapon.enabled = true;
 
         currentPlayerUnit = unit;
+        spectatingDuck = null;
+        isSpectating = false;
 
-        unitHealth.Died -= HandlePlayerUnitDied;
-        unitHealth.Died += HandlePlayerUnitDied;
+        SetSpectatorUI(false);
 
-        selectingUnit = false;
+        health.Died -= HandlePlayerUnitDied;
+        health.Died += HandlePlayerUnitDied;
 
         if (cameraController != null)
         {
@@ -107,49 +129,59 @@ public class PlayerManager : MonoBehaviour
         if (currentPlayerUnit == null)
             return;
 
-        UnitHealth unitHealth =
+        UnitHealth health =
             currentPlayerUnit.GetComponent<UnitHealth>();
 
-        AIController aiController =
+        AIController ai =
             currentPlayerUnit.GetComponent<AIController>();
 
-        PlayerController playerController =
+        PlayerController player =
             currentPlayerUnit.GetComponent<PlayerController>();
 
-        if (unitHealth != null)
-            unitHealth.Died -= HandlePlayerUnitDied;
+        PlayerWeaponInput weaponInput =
+            currentPlayerUnit.GetComponent<PlayerWeaponInput>();
 
-        if (aiController != null)
-            aiController.enabled = true;
+        WeaponController weapon =
+            currentPlayerUnit.GetComponent<WeaponController>();
 
-        if (playerController != null)
-            playerController.enabled = false;
+        if (health != null)
+            health.Died -= HandlePlayerUnitDied;
+
+        if (ai != null)
+            ai.enabled = true;
+
+        if (player != null)
+            player.enabled = false;
+
+        if (weaponInput != null)
+            weaponInput.enabled = false;
+
+        // AI가 계속 공격해야 하므로 WeaponController는 끄지 않습니다.
+        if (weapon != null)
+            weapon.enabled = true;
 
         currentPlayerUnit = null;
     }
 
     private void HandlePlayerUnitDied(UnitHealth deadUnit)
     {
-        if (currentPlayerUnit == null)
+        if (currentPlayerUnit == null ||
+            deadUnit.gameObject != currentPlayerUnit)
+        {
             return;
-
-        if (deadUnit.gameObject != currentPlayerUnit)
-            return;
+        }
 
         deadUnit.Died -= HandlePlayerUnitDied;
 
         currentPlayerUnit = null;
         canPossess = false;
-        selectingUnit = false;
+        isSpectating = true;
 
-        if (cameraController != null)
-        {
-            cameraController.SetTarget(null);
-            cameraController.UnlockCursor();
-        }
+        SelectFirstSpectatingDuck();
+        SetSpectatorUI(true);
 
         Debug.Log(
-            $"플레이어 Duck 사망 - {possessionDelay}초 관전 시작"
+            $"플레이어 Duck 사망 - {possessionDelay}초 후 빙의 가능"
         );
 
         StartCoroutine(PossessionCooldown());
@@ -157,49 +189,179 @@ public class PlayerManager : MonoBehaviour
 
     private IEnumerator PossessionCooldown()
     {
-        yield return new WaitForSeconds(possessionDelay);
+        float remainingTime = possessionDelay;
+
+        while (remainingTime > 0f)
+        {
+            if (respawnText != null)
+            {
+                int seconds =
+                    Mathf.CeilToInt(remainingTime);
+
+                respawnText.text =
+                    $"{seconds}초 후 부활 가능\n" +
+                    "A / D : 관전 대상 변경";
+            }
+
+            remainingTime -= Time.deltaTime;
+            yield return null;
+        }
 
         canPossess = true;
-        selectingUnit = true;
 
-        if (cameraController != null)
-            cameraController.UnlockCursor();
+        if (spectatingDuck == null)
+            SelectFirstSpectatingDuck();
 
-        Debug.Log("빙의 가능 - 화면의 아군 Duck을 클릭하세요.");
+        UpdateRespawnText();
+
+        Debug.Log(
+            "빙의 가능 - A/D로 아군 Duck 변경, Space로 빙의"
+        );
     }
 
-    private void TrySelectDuck()
+    private void SelectFirstSpectatingDuck()
     {
-        Vector2 mousePosition =
-            Mouse.current.position.ReadValue();
+        List<GameObject> ducks =
+            FindAvailableDucks();
 
-        Ray ray = mainCamera.ScreenPointToRay(mousePosition);
+        if (ducks.Count == 0)
+        {
+            spectatingDuck = null;
 
-        if (!Physics.Raycast(
-            ray,
-            out RaycastHit hit,
-            1000f,
-            selectionLayerMask,
-            QueryTriggerInteraction.Ignore))
+            if (cameraController != null)
+                cameraController.SetTarget(null);
+
+            UpdateRespawnText();
+
+            Debug.Log(
+                "관전 가능한 아군 Duck이 없습니다."
+            );
+
+            return;
+        }
+
+        spectatingDuck = ducks[0];
+
+        SetSpectatingCamera();
+
+        if (canPossess)
+            UpdateRespawnText();
+    }
+
+    private void ChangeSpectatingDuck(int direction)
+    {
+        List<GameObject> ducks =
+            FindAvailableDucks();
+
+        if (ducks.Count == 0)
+        {
+            spectatingDuck = null;
+
+            if (cameraController != null)
+                cameraController.SetTarget(null);
+
+            return;
+        }
+
+        int index =
+            ducks.IndexOf(spectatingDuck);
+
+        if (index < 0)
+        {
+            index = 0;
+        }
+        else
+        {
+            index =
+                (index + direction + ducks.Count) %
+                ducks.Count;
+        }
+
+        spectatingDuck = ducks[index];
+
+        SetSpectatingCamera();
+
+        Debug.Log(
+            $"관전 중: {spectatingDuck.name}"
+        );
+    }
+
+    private List<GameObject> FindAvailableDucks()
+    {
+        List<GameObject> ducks =
+            new List<GameObject>();
+
+        UnitTeam[] units =
+    FindObjectsByType<UnitTeam>();
+
+        foreach (UnitTeam unit in units)
+        {
+            if (unit.CurrentTeam !=
+                UnitTeam.Team.Duck)
+            {
+                continue;
+            }
+
+            UnitHealth health =
+                unit.GetComponent<UnitHealth>();
+
+            AIController ai =
+                unit.GetComponent<AIController>();
+
+            if (health == null ||
+                health.IsDead ||
+                ai == null ||
+                !ai.enabled)
+            {
+                continue;
+            }
+
+            ducks.Add(unit.gameObject);
+        }
+
+        return ducks;
+    }
+
+    private void SetSpectatorUI(bool active)
+    {
+        if (spectatorUI != null)
+            spectatorUI.SetActive(active);
+    }
+
+    private void UpdateRespawnText()
+    {
+        if (respawnText == null)
+            return;
+
+        if (spectatingDuck == null)
+        {
+            respawnText.text =
+                "아군 지원군을 기다리는 중...";
+
+            return;
+        }
+
+        if (canPossess)
+        {
+            respawnText.text =
+                "부활 가능\n" +
+                "A / D : 관전 대상 변경\n" +
+                "SPACE : 부활";
+        }
+    }
+
+    private void SetSpectatingCamera()
+    {
+        if (spectatingDuck == null ||
+            cameraController == null)
         {
             return;
         }
 
-        UnitTeam selectedTeam =
-            hit.collider.GetComponentInParent<UnitTeam>();
+        cameraController.SetTarget(
+            spectatingDuck
+        );
 
-        if (selectedTeam == null)
-            return;
-
-        if (selectedTeam.CurrentTeam != UnitTeam.Team.Duck)
-            return;
-
-        UnitHealth selectedHealth =
-            selectedTeam.GetComponent<UnitHealth>();
-
-        if (selectedHealth == null || selectedHealth.IsDead)
-            return;
-
-        Possess(selectedTeam.gameObject);
+        cameraController.LockCursor();
     }
 }

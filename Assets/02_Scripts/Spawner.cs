@@ -11,20 +11,53 @@ public class Spawner : MonoBehaviour
     [SerializeField] private Transform spawnPoint;
     [SerializeField] private Transform destination;
 
+    [Header("Road")]
+    [SerializeField] private BoxCollider moveArea;
+
+    [Header("Timing")]
     [SerializeField] private float spawnInterval = 20f;
     [SerializeField] private int spawnCount = 5;
     [SerializeField] private float spawnDelay = 0.3f;
 
+    private Coroutine spawnCoroutine;
+    private bool isSpawning;
+
     private void Start()
     {
-        StartCoroutine(SpawnRoutine());
+        StartSpawning();
+    }
+
+    public void StartSpawning()
+    {
+        if (isSpawning)
+            return;
+
+        isSpawning = true;
+        spawnCoroutine = StartCoroutine(SpawnRoutine());
+    }
+
+    public void StopSpawning()
+    {
+        isSpawning = false;
+
+        if (spawnCoroutine != null)
+        {
+            StopCoroutine(spawnCoroutine);
+            spawnCoroutine = null;
+        }
+
+        Debug.Log($"{gameObject.name}: Spawner 정지");
     }
 
     private IEnumerator SpawnRoutine()
     {
-        while (true)
+        while (isSpawning)
         {
             yield return StartCoroutine(SpawnUnits());
+
+            if (!isSpawning)
+                yield break;
+
             yield return new WaitForSeconds(spawnInterval);
         }
     }
@@ -33,6 +66,9 @@ public class Spawner : MonoBehaviour
     {
         for (int i = 0; i < spawnCount; i++)
         {
+            if (!isSpawning)
+                yield break;
+
             SpawnUnit();
 
             if (i < spawnCount - 1)
@@ -62,28 +98,24 @@ public class Spawner : MonoBehaviour
             spawnedUnit.GetComponent<UnitTeam>();
 
         if (unitTeam != null)
-        {
             unitTeam.SetTeam(team);
-        }
         else
-        {
             Debug.LogWarning(
                 $"{spawnedUnit.name}: UnitTeam이 없습니다."
             );
-        }
 
         AIController aiController =
             spawnedUnit.GetComponent<AIController>();
 
-        if (aiController != null)
-        {
-            aiController.SetDestination(destination);
-        }
-        else
+        if (aiController == null)
         {
             Debug.LogWarning(
                 $"{spawnedUnit.name}: AIController가 없습니다."
             );
+            return;
         }
+
+        aiController.SetDestination(destination);
+        aiController.SetMoveArea(moveArea);
     }
 }
