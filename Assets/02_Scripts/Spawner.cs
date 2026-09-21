@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Spawner : MonoBehaviour
@@ -9,10 +10,12 @@ public class Spawner : MonoBehaviour
     [Header("Spawn")]
     [SerializeField] private GameObject spawnPrefab;
     [SerializeField] private Transform spawnPoint;
-    [SerializeField] private Transform destination;
 
-    [Header("Road")]
-    [SerializeField] private BoxCollider moveArea;
+    [Header("Battlefield")]
+    [SerializeField] private BattleFieldManager battleFieldManager;
+
+    [Header("Lane")]
+    [SerializeField] private float laneHalfWidth = 3f;
 
     [Header("Timing")]
     [SerializeField] private float spawnInterval = 20f;
@@ -21,9 +24,35 @@ public class Spawner : MonoBehaviour
 
     private Coroutine spawnCoroutine;
     private bool isSpawning;
+    private int nextFrontIndex;
+
+    private BattleArea homeArea;
 
     private void Start()
     {
+        homeArea = GetComponentInParent<BattleArea>();
+
+        if (battleFieldManager == null)
+            battleFieldManager = FindAnyObjectByType<BattleFieldManager>();
+
+        if (homeArea == null)
+        {
+            Debug.LogError($"{gameObject.name}: 부모 BattleArea를 찾을 수 없습니다.");
+            return;
+        }
+
+        if (battleFieldManager == null)
+        {
+            Debug.LogError($"{gameObject.name}: BattleFieldManager를 찾을 수 없습니다.");
+            return;
+        }
+
+        if (spawnPrefab == null || spawnPoint == null)
+        {
+            Debug.LogError($"{gameObject.name}: Spawn Prefab 또는 Spawn Point가 없습니다.");
+            return;
+        }
+
         StartSpawning();
     }
 
@@ -78,14 +107,47 @@ public class Spawner : MonoBehaviour
 
     private void SpawnUnit()
     {
-        if (spawnPrefab == null ||
-            spawnPoint == null ||
-            destination == null)
+        IReadOnlyList<BattleArea> fronts =
+            battleFieldManager.GetAttackableAreas(team);
+
+        if (fronts == null || fronts.Count == 0)
+        {
+            Debug.LogWarning($"{gameObject.name}: 현재 공격 가능한 Area가 없습니다.");
+            return;
+        }
+
+        BattleArea targetArea =
+            fronts[nextFrontIndex % fronts.Count];
+
+        nextFrontIndex++;
+
+        List<BattleArea> areaPath =
+            battleFieldManager.FindPath(homeArea, targetArea);
+
+        if (areaPath.Count < 2)
         {
             Debug.LogWarning(
-                $"{gameObject.name}: Spawn 설정이 빠져 있습니다."
+                $"{gameObject.name}: {homeArea.name} → {targetArea.name} 경로가 없습니다."
             );
             return;
+        }
+
+        List<Transform> waypoints = new();
+
+        // 시작 Area는 이미 서 있으므로 제외하고,
+        // 다음 Area부터 Destination을 따라갑니다.
+        for (int i = 1; i < areaPath.Count; i++)
+        {
+            if (areaPath[i].Destination != null)
+                waypoints.Add(areaPath[i].Destination);
+        }
+
+        Transform finalTarget = GetFinalTarget(targetArea);
+
+        if (finalTarget != null &&
+            (waypoints.Count == 0 || waypoints[waypoints.Count - 1] != finalTarget))
+        {
+            waypoints.Add(finalTarget);
         }
 
         GameObject spawnedUnit = Instantiate(
@@ -94,28 +156,40 @@ public class Spawner : MonoBehaviour
             spawnPoint.rotation
         );
 
-        UnitTeam unitTeam =
-            spawnedUnit.GetComponent<UnitTeam>();
+        UnitTeam spawnedTeam = spawnedUnit.GetComponent<UnitTeam>();
 
-        if (unitTeam != null)
-            unitTeam.SetTeam(team);
-        else
-            Debug.LogWarning(
-                $"{spawnedUnit.name}: UnitTeam이 없습니다."
-            );
+        if (spawnedTeam != null)
+            spawnedTeam.SetTeam(team);
 
         AIController aiController =
             spawnedUnit.GetComponent<AIController>();
 
         if (aiController == null)
         {
-            Debug.LogWarning(
-                $"{spawnedUnit.name}: AIController가 없습니다."
-            );
+            Debug.LogWarning($"{spawnedUnit.name}: AIController가 없습니다.");
             return;
         }
 
-        aiController.SetDestination(destination);
-        aiController.SetMoveArea(moveArea);
+        float laneOffset = Random.Range(-laneHalfWidth, laneHalfWidth);
+        aiController.SetPath(waypoints, laneOffset);
+
+        Debug.Log(
+            $"{gameObject.name}: {spawnedUnit.name} → {targetArea.name} / " +
+            $"경로 {areaPath.Count} Area / Lane {laneOffset:F1}"
+        );
+    }
+
+    private Transform GetFinalTarget(BattleArea targetArea)
+    {
+        BaseController areaBase = targetArea.AreaBase;
+
+        if (areaBase != null &&
+            areaBase.CurrentTeam != team &&
+            areaBase.CurrentState != BaseController.BaseState.Destroyed)
+        {
+            return areaBase.transform;
+        }
+
+        return targetArea.Destination;
     }
 }

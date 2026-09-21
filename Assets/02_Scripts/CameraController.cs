@@ -6,6 +6,7 @@ public class CameraController : MonoBehaviour
     [SerializeField] private Transform target;
     [SerializeField] private Transform duck;
 
+    [Header("Camera")]
     [SerializeField] private float distance = 6f;
     [SerializeField] private float height = 1.5f;
     [SerializeField] private float lookHeight = 2f;
@@ -14,22 +15,15 @@ public class CameraController : MonoBehaviour
     [SerializeField] private float minPitch = -10f;
     [SerializeField] private float maxPitch = 60f;
 
-    [SerializeField, Range(0f, 1f)]
-    private float bodyFollowAmount = 0.7f;
-
     private float yaw;
     private float pitch = 15f;
-    private float previousDuckYaw;
 
     void Start()
     {
         LockCursor();
 
         if (duck != null)
-        {
-            previousDuckYaw = duck.eulerAngles.y;
-            yaw = previousDuckYaw;
-        }
+            yaw = duck.eulerAngles.y;
     }
 
     void LateUpdate()
@@ -44,25 +38,30 @@ public class CameraController : MonoBehaviour
 
             yaw += mouseDelta.x * sensitivity;
             pitch -= mouseDelta.y * sensitivity;
-            pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
+
+            pitch = Mathf.Clamp(
+                pitch,
+                minPitch,
+                maxPitch
+            );
         }
 
-        float currentDuckYaw = duck.eulerAngles.y;
-
-        float duckYawDelta = Mathf.DeltaAngle(
-            previousDuckYaw,
-            currentDuckYaw
+        // 마우스 좌우 방향으로 Duck 전체 회전
+        duck.rotation = Quaternion.Euler(
+            0f,
+            yaw,
+            0f
         );
 
-        yaw += duckYawDelta * bodyFollowAmount;
-        previousDuckYaw = currentDuckYaw;
-
-        Quaternion rotation = Quaternion.Euler(pitch, yaw, 0f);
+        Quaternion cameraRotation =
+            Quaternion.Euler(pitch, yaw, 0f);
 
         Vector3 offset =
-            rotation * new Vector3(0f, height, -distance);
+            cameraRotation *
+            new Vector3(0f, height, -distance);
 
-        Vector3 targetPosition = target.position + offset;
+        Vector3 targetPosition =
+            target.position + offset;
 
         transform.position = Vector3.Lerp(
             transform.position,
@@ -71,7 +70,8 @@ public class CameraController : MonoBehaviour
         );
 
         Vector3 lookPosition =
-            target.position + Vector3.up * lookHeight;
+            target.position +
+            Vector3.up * lookHeight;
 
         transform.LookAt(lookPosition);
     }
@@ -100,8 +100,7 @@ public class CameraController : MonoBehaviour
 
         target = newCameraTarget;
 
-        previousDuckYaw = duck.eulerAngles.y;
-        yaw = previousDuckYaw;
+        yaw = duck.eulerAngles.y;
     }
 
     public void LockCursor()

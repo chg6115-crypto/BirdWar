@@ -5,11 +5,9 @@ public class PlayerController : MonoBehaviour
 {
     private UnitStats stats;
 
-    [SerializeField]
-    private float backwardSpeedMultiplier = 0.6f;
-
-    [SerializeField]
-    private float rotationSpeed = 120f;
+    [Header("Movement")]
+    [SerializeField] private float backwardSpeedMultiplier = 0.7f;
+    [SerializeField] private float runSpeedMultiplier = 1.5f;
 
     void Awake()
     {
@@ -24,35 +22,43 @@ public class PlayerController : MonoBehaviour
         if (stats == null || Keyboard.current == null)
             return;
 
-        float moveInput = 0f;
-        float rotateInput = 0f;
+        float horizontal = 0f;
+        float vertical = 0f;
 
         if (Keyboard.current.wKey.isPressed)
-            moveInput += 1f;
+            vertical += 1f;
 
         if (Keyboard.current.sKey.isPressed)
-            moveInput -= 1f;
+            vertical -= 1f;
 
         if (Keyboard.current.aKey.isPressed)
-            rotateInput -= 1f;
+            horizontal -= 1f;
 
         if (Keyboard.current.dKey.isPressed)
-            rotateInput += 1f;
+            horizontal += 1f;
 
-        transform.Rotate(
-            0f,
-            rotateInput * rotationSpeed * Time.deltaTime,
-            0f
-        );
+        Vector3 moveDirection =
+            transform.forward * vertical +
+            transform.right * horizontal;
+
+        if (moveDirection.sqrMagnitude > 1f)
+            moveDirection.Normalize();
 
         float moveSpeed = stats.MoveSpeed;
 
-        if (moveInput < 0f)
+        // S 방향으로 움직일 때만 후진 감속
+        if (vertical < 0f)
             moveSpeed *= backwardSpeedMultiplier;
 
+        bool isRunning =
+            Keyboard.current.leftShiftKey.isPressed ||
+            Keyboard.current.rightShiftKey.isPressed;
+
+        if (isRunning)
+            moveSpeed *= runSpeedMultiplier;
+
         transform.position +=
-            transform.forward *
-            moveInput *
+            moveDirection *
             moveSpeed *
             Time.deltaTime;
     }
