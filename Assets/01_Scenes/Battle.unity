@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 9ca22510633fbfd4399f1704cd9d5c72, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -1572,6 +1572,28 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 150, y: 1, z: 30}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &573162475 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8810605454442767333, guid: e8434d75d5b7ba14683177bdf1b6cbf9, type: 3}
+  m_PrefabInstance: {fileID: 2097613662}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &573162478
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 573162475}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5957de6cd710f7044ac82f841557efca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BirdMoveTest
+  moveSpeed: 1.5
+  verticalAmount: 0.5
+  verticalSpeed: 1
+  sideAmount: 0.3
+  sideSpeed: 0.7
 --- !u!1 &599114532
 GameObject:
   m_ObjectHideFlags: 0
@@ -1687,6 +1709,7 @@ Transform:
   m_Children:
   - {fileID: 1748011828}
   - {fileID: 2113894252}
+  - {fileID: 1409100238}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &660972589
@@ -2532,6 +2555,51 @@ MonoBehaviour:
   destination: {fileID: 0}
   areaBase: {fileID: 0}
   connectedAreas: []
+--- !u!1 &1409100237
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1409100238}
+  - component: {fileID: 1409100239}
+  m_Layer: 0
+  m_Name: Skybox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1409100238
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1409100237}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 658062076}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1409100239
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1409100237}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea2e1e0a0cad7a14f87b98da9ac24a1d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SkyboxRotator
+  rotationSpeed: 1
 --- !u!1 &1447557160
 GameObject:
   m_ObjectHideFlags: 0
@@ -3870,6 +3938,66 @@ MonoBehaviour:
   destination: {fileID: 0}
   areaBase: {fileID: 0}
   connectedAreas: []
+--- !u!1001 &2097613662
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1116715865527539521, guid: e8434d75d5b7ba14683177bdf1b6cbf9, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 31
+      objectReference: {fileID: 0}
+    - target: {fileID: 1116715865527539521, guid: e8434d75d5b7ba14683177bdf1b6cbf9, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 5.06
+      objectReference: {fileID: 0}
+    - target: {fileID: 1116715865527539521, guid: e8434d75d5b7ba14683177bdf1b6cbf9, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 7.38055
+      objectReference: {fileID: 0}
+    - target: {fileID: 1116715865527539521, guid: e8434d75d5b7ba14683177bdf1b6cbf9, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1116715865527539521, guid: e8434d75d5b7ba14683177bdf1b6cbf9, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1116715865527539521, guid: e8434d75d5b7ba14683177bdf1b6cbf9, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1116715865527539521, guid: e8434d75d5b7ba14683177bdf1b6cbf9, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1116715865527539521, guid: e8434d75d5b7ba14683177bdf1b6cbf9, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1116715865527539521, guid: e8434d75d5b7ba14683177bdf1b6cbf9, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1116715865527539521, guid: e8434d75d5b7ba14683177bdf1b6cbf9, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8810605454442767333, guid: e8434d75d5b7ba14683177bdf1b6cbf9, type: 3}
+      propertyPath: m_Name
+      value: 10BirdsPrefab
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8810605454442767333, guid: e8434d75d5b7ba14683177bdf1b6cbf9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 573162478}
+  m_SourcePrefab: {fileID: 100100000, guid: e8434d75d5b7ba14683177bdf1b6cbf9, type: 3}
 --- !u!1 &2105811753
 GameObject:
   m_ObjectHideFlags: 0
@@ -4075,3 +4203,4 @@ SceneRoots:
   - {fileID: 145651923}
   - {fileID: 1580334650}
   - {fileID: 1920781040}
+  - {fileID: 2097613662}
